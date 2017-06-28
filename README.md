@@ -9,7 +9,7 @@ useful command line tool to compute job timings for a Sauce Labs test
 
 ### Using the tool
 
- ./jobTimings.sh -t <test user> -j <job ID>
+ ```./jobTimings.sh -t <test user> -j <job ID>```
 
 ### Example
 
