@@ -10,6 +10,9 @@ useful command line tool to compute job timings for a Sauce Labs test
 ### Using the tool
 
  ```./jobTimings.sh -t <test user> -j <job ID>```
+ 
+ 'test user' is the user who ran the Sauce test
+ 'job ID' is the job/test ID
 
 ### Example
 
