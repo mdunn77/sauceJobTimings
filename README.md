@@ -4,15 +4,16 @@ useful command line tool to compute job timings for a Sauce Labs test
 
 ### Prerequisites
 
+* curl must be in your PATH
 * [jq](https://stedolan.github.io/jq/) must be installed and in your PATH
 * your Sauce username and access key must be set in the environment variables **SAUCE_USERNAME** and **SAUCE_ACCESS_KEY**
 
 ### Using the tool
 
- ```./jobTimings.sh -t <test user> -j <job ID>```
+```./jobTimings.sh -t <test user> -j <job ID>```
  
- * 'test user' is the user who ran the Sauce test
- * 'job ID' is the job/test ID
+* 'test user' is the user who ran the Sauce test
+* 'job ID' is the job/test ID
 
 ### Example
 
