@@ -1,0 +1,128 @@
+#!/bin/bash
+
+USAGE="try 'jobTimings -h' for more information"
+HELP=$'to get job timings for a single job, run:  jobTimings -t <test user> -j <jobID>\nto get job timings for the last n jobs, run:  jobTimings -t <test user> -n <number of jobs>'
+
+
+# As long as there is at least one more argument, keep looping
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+        -h|--help)
+        echo "$HELP"
+        exit 1
+        ;;
+        -t|--testuser)
+        shift # past the key and to the value
+        TESTUSER="$1"
+        ;;
+        -j|--jobid)
+        shift # past the key and to the value
+        JOBID="$1"
+        ;;
+        -n|--numJobs)
+        shift # past the key and to the value
+        NUMJOBS="$1"
+        ;;
+        -b|--brief)
+        shift # past the key and to the value
+        BRIEF=1
+        ;;
+        *)
+        # Do whatever you want with extra options
+        echo "Unknown option '$key'"
+        ;;
+    esac
+    # Shift after checking all the cases to get the next option
+    shift
+done
+
+if [ -z "$SAUCE_USERNAME" ]; then
+    echo "Need to set SAUCE_USERNAME"
+    exit 1
+fi  
+
+if [ -z "$SAUCE_ACCESS_KEY" ]; then
+    echo "Need to set SAUCE_ACCESS_KEY"
+    exit 1
+fi
+
+if [ -z "${TESTUSER}" ]; then
+	echo "No test user set, " ${USAGE}
+	exit 1
+fi  
+
+JSONFILE="/tmp/log.json"
+JOBSJSONFILE="/tmp/jobs.json"
+DURATIONSFILE="/tmp/durations.txt"
+BETWEENSFILE="/tmp/betweens.txt"
+
+if [ ! -z "$JOBID" ]; then
+
+	echo SAUCE USERNAME: "$SAUCE_USERNAME"
+	echo TEST USER: "${TESTUSER}"
+	echo JOB ID: "${JOBID}"
+
+	echo "Getting log.json"
+	curl -s -u $SAUCE_USERNAME:$SAUCE_ACCESS_KEY https://saucelabs.com/rest/v1/${TESTUSER}/jobs/${JOBID}/assets/log.json > ${JSONFILE}
+
+	echo "Parsing commands from log.json"
+	jq '.[] | .duration' ${JSONFILE} > ${DURATIONSFILE}
+	jq '.[] | .between_commands' ${JSONFILE} > ${BETWEENSFILE}
+
+	NUMCOMMANDS=$(cat ${DURATIONSFILE} | wc -l )
+	TOTALDURATIONS=$(jq -s add ${DURATIONSFILE})
+	TOTALBETWEEN=$(jq -s add ${BETWEENSFILE})
+	TOTALTIME=$(dc <<<"${TOTALDURATIONS} ${TOTALBETWEEN} + p")
+	AVGDURATION=$(jq -s 'add/length' ${DURATIONSFILE})
+	AVGBETWEEN=$(jq -s 'add/length' ${BETWEENSFILE})
+
+	echo "Number of commands:" ${NUMCOMMANDS}
+	echo "Total time:" ${TOTALTIME}
+	echo "Total command duration:" ${TOTALDURATIONS}
+	echo "Average command duration:" ${AVGDURATION}
+	echo "Total time between commands:" ${TOTALBETWEEN}
+	echo "Average time between commands:" ${AVGBETWEEN}
+
+	exit 
+fi
+
+if [ ! -z "$NUMJOBS" ]; then
+
+	if [ -z "$BRIEF" ]; then
+		echo SAUCE USERNAME: "$SAUCE_USERNAME"
+		echo TEST USER: "${TESTUSER}"
+		echo NUMBER OF JOBS: "${NUMJOBS}"
+
+		echo "Getting last" ${NUMJOBS} "job IDs"
+	fi
+	
+	curl -s -u $SAUCE_USERNAME:$SAUCE_ACCESS_KEY https://saucelabs.com/rest/v1/${TESTUSER}/jobs?limit=${NUMJOBS} | jq -r '.[] .id' > ${JOBSJSONFILE}
+
+	while read p; do
+  		
+		JOBID=$p
+		curl -s -u $SAUCE_USERNAME:$SAUCE_ACCESS_KEY https://saucelabs.com/rest/v1/${TESTUSER}/jobs/${JOBID}/assets/log.json > ${JSONFILE}
+		jq '.[] | .duration' ${JSONFILE} > ${DURATIONSFILE}
+		jq '.[] | .between_commands' ${JSONFILE} > ${BETWEENSFILE}
+		NUMCOMMANDS=$(cat ${DURATIONSFILE} | wc -l )
+		TOTALDURATIONS=$(jq -s add ${DURATIONSFILE})
+		TOTALBETWEEN=$(jq -s add ${BETWEENSFILE})
+		TOTALTIME=$(dc <<<"${TOTALDURATIONS} ${TOTALBETWEEN} + p")
+		AVGDURATION=$(jq -s 'add/length' ${DURATIONSFILE})
+		AVGBETWEEN=$(jq -s 'add/length' ${BETWEENSFILE})
+		
+		if [ ! -z "$BRIEF" ]; then
+			echo ${JOBID}", "$AVGDURATION
+		else
+			echo ${JOBID} "commands:" ${NUMCOMMANDS}", total time:" $TOTALTIME", total durations:" ${TOTALDURATIONS}", avg duration:" $AVGDURATION", total between:" $TOTALBETWEEN", avg between:" $AVGBETWEEN
+		fi
+
+	done <$JOBSJSONFILE
+
+
+
+	exit 
+fi
+
+echo $USAGE
