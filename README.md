@@ -5,7 +5,7 @@ useful command line tool to compute job timings for a Sauce Labs test
 ### Prerequisites
 
 * curl must be in your PATH
-* [jq](https://stedolan.github.io/jq/) must be installed and in your PATH
+* [jq](https://stedolan.github.io/jq/) must be installed and in your PATH - easiest way on a Mac is to use [Homebrew](https://brew.sh/) and install using ```brew install jq```
 * your Sauce username and access key must be set in the environment variables **SAUCE_USERNAME** and **SAUCE_ACCESS_KEY**
 
 ### Using the tool
