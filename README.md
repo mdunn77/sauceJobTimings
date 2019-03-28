@@ -31,6 +31,12 @@ To get job timings for the 100 most recent tests, *with brief output*:
 * 'test user' is the user who ran the Sauce test
 * 'number of tests' is the number of tests to get timings for
 
+To specify a datacentre:
+
+```./jobTimings -t <test user> -n <number of tests> -d <DC>```
+
+* 'DC' is either US (default) or EU
+
 
 ### Example
 

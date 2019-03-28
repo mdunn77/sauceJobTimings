@@ -1,7 +1,7 @@
 #!/bin/bash
 
 USAGE="try 'jobTimings -h' for more information"
-HELP=$'to get job timings for a single job, run:  jobTimings -t <test user> -j <jobID>\nto get job timings for the last n jobs, run:  jobTimings -t <test user> -n <number of jobs>'
+HELP=$'to get job timings for a single job, run:  jobTimings -d <DC> -t <test user> -j <jobID>\nto get job timings for the last n jobs, run:  jobTimings -d <DC> -t <test user> -n <number of jobs>\nDC is EU or US'
 
 
 # As long as there is at least one more argument, keep looping
@@ -11,6 +11,10 @@ while [[ $# -gt 0 ]]; do
         -h|--help)
         echo "$HELP"
         exit 1
+        ;;
+        -d|--dc)
+        shift # past the key and to the value
+        DC="$1"
         ;;
         -t|--testuser)
         shift # past the key and to the value
@@ -52,6 +56,11 @@ if [ -z "${TESTUSER}" ]; then
 	exit 1
 fi  
 
+DCURL="https://saucelabs.com"
+if [ "${DC}" == "EU" ]; then
+	DCURL="https://eu-central-1.saucelabs.com"
+fi 
+
 JSONFILE="/tmp/log.json"
 JOBSJSONFILE="/tmp/jobs.json"
 DURATIONSFILE="/tmp/durations.txt"
@@ -59,12 +68,13 @@ BETWEENSFILE="/tmp/betweens.txt"
 
 if [ ! -z "$JOBID" ]; then
 
+	echo DC URL: "${DCURL}"
 	echo SAUCE USERNAME: "$SAUCE_USERNAME"
 	echo TEST USER: "${TESTUSER}"
 	echo JOB ID: "${JOBID}"
 
 	echo "Getting log.json"
-	curl -s -u $SAUCE_USERNAME:$SAUCE_ACCESS_KEY https://saucelabs.com/rest/v1/${TESTUSER}/jobs/${JOBID}/assets/log.json > ${JSONFILE}
+	curl -s -u $SAUCE_USERNAME:$SAUCE_ACCESS_KEY ${DCURL}/rest/v1/${TESTUSER}/jobs/${JOBID}/assets/log.json > ${JSONFILE}
 
 	echo "Parsing commands from log.json"
 	jq '.[] | .duration' ${JSONFILE} > ${DURATIONSFILE}
@@ -78,7 +88,7 @@ if [ ! -z "$JOBID" ]; then
 	AVGBETWEEN=$(jq -s 'add/length' ${BETWEENSFILE})
 
 	echo "Number of commands:" ${NUMCOMMANDS}
-	echo "Total time:" ${TOTALTIME}
+	echo "Total test duration:" ${TOTALTIME}
 	echo "Total command duration:" ${TOTALDURATIONS}
 	echo "Average command duration:" ${AVGDURATION}
 	echo "Total time between commands:" ${TOTALBETWEEN}
@@ -90,6 +100,7 @@ fi
 if [ ! -z "$NUMJOBS" ]; then
 
 	if [ -z "$BRIEF" ]; then
+		echo DC URL: "${DCURL}"
 		echo SAUCE USERNAME: "$SAUCE_USERNAME"
 		echo TEST USER: "${TESTUSER}"
 		echo NUMBER OF JOBS: "${NUMJOBS}"
@@ -97,12 +108,12 @@ if [ ! -z "$NUMJOBS" ]; then
 		echo "Getting last" ${NUMJOBS} "job IDs"
 	fi
 	
-	curl -s -u $SAUCE_USERNAME:$SAUCE_ACCESS_KEY https://saucelabs.com/rest/v1/${TESTUSER}/jobs?limit=${NUMJOBS} | jq -r '.[] .id' > ${JOBSJSONFILE}
+	curl -s -u $SAUCE_USERNAME:$SAUCE_ACCESS_KEY ${DCURL}/rest/v1/${TESTUSER}/jobs?limit=${NUMJOBS} | jq -r '.[] .id' > ${JOBSJSONFILE}
 
 	while read p; do
   		
 		JOBID=$p
-		curl -s -u $SAUCE_USERNAME:$SAUCE_ACCESS_KEY https://saucelabs.com/rest/v1/${TESTUSER}/jobs/${JOBID}/assets/log.json > ${JSONFILE}
+		curl -s -u $SAUCE_USERNAME:$SAUCE_ACCESS_KEY ${DCURL}/rest/v1/${TESTUSER}/jobs/${JOBID}/assets/log.json > ${JSONFILE}
 		jq '.[] | .duration' ${JSONFILE} > ${DURATIONSFILE}
 		jq '.[] | .between_commands' ${JSONFILE} > ${BETWEENSFILE}
 		NUMCOMMANDS=$(cat ${DURATIONSFILE} | wc -l )
