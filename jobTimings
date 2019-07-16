@@ -61,6 +61,7 @@ if [ "${DC}" == "EU" ]; then
 	DCURL="https://eu-central-1.saucelabs.com"
 elif [[ "${DC}" == "USEAST" ]]; then
 	DCURL="https://us-east-1.saucelabs.com"
+fi
 
 JSONFILE="/tmp/log.json"
 JOBSJSONFILE="/tmp/jobs.json"
