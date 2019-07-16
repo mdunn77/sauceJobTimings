@@ -35,7 +35,7 @@ To specify a datacentre:
 
 ```./jobTimings -t <test user> -n <number of tests> -d <DC>```
 
-* 'DC' is either US (default) or EU
+* 'DC' is either US (default) or EU, or USEAST (for Headless)
 
 
 ### Example

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 USAGE="try 'jobTimings -h' for more information"
-HELP=$'to get job timings for a single job, run:  jobTimings -d <DC> -t <test user> -j <jobID>\nto get job timings for the last n jobs, run:  jobTimings -d <DC> -t <test user> -n <number of jobs>\nDC is EU or US'
+HELP=$'to get job timings for a single job, run:  jobTimings -d <DC> -t <test user> -j <jobID>\nto get job timings for the last n jobs, run:  jobTimings -d <DC> -t <test user> -n <number of jobs>\nDC is EU or US or USEAST'
 
 
 # As long as there is at least one more argument, keep looping
@@ -59,7 +59,8 @@ fi
 DCURL="https://saucelabs.com"
 if [ "${DC}" == "EU" ]; then
 	DCURL="https://eu-central-1.saucelabs.com"
-fi 
+elif [[ "${DC}" == "USEAST" ]]; then
+	DCURL="https://us-east-1.saucelabs.com"
 
 JSONFILE="/tmp/log.json"
 JOBSJSONFILE="/tmp/jobs.json"
