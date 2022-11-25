@@ -56,11 +56,11 @@ if [ -z "${TESTUSER}" ]; then
 	exit 1
 fi  
 
-DCURL="https://saucelabs.com"
+DCURL="https://api.us-west-1.saucelabs.com"
 if [ "${DC}" == "EU" ]; then
-	DCURL="https://eu-central-1.saucelabs.com"
+	DCURL="https://api.eu-central-1.saucelabs.com"
 elif [[ "${DC}" == "USEAST" ]]; then
-	DCURL="https://us-east-1.saucelabs.com"
+	DCURL="https://api.us-east-1.saucelabs.com"
 fi
 
 JSONFILE="/tmp/log.json"
